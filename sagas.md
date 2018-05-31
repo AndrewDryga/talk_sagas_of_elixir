@@ -189,7 +189,7 @@ And then cancel the booking
 
 ![inline](sagas/problem_hard_error.png)
 
-^ And if we failed on one of the bookings, we need to cancel other ones
+^ And if some of the bookings failed, we need to cancel other ones
 and if we failed to charge the card we need to cancel all of them
 
 ---
@@ -234,7 +234,7 @@ end
 
 ^ And the worst part of it is that when there are more edge cases - else block keeps growing.
 
-^ For example, It doesn't cover error handling when the booking request is delivered but we did not get the response
+^ For example, It doesn't cover the scenario when the booking request is delivered but we did not get the response, so we are paying for booking and don't know anything about it
 
 ---
 
@@ -267,11 +267,11 @@ def book_trip(attrs) do
 end
 ``` -->
 
-^ To handle that we would use three different stage names for bookings and duplicate the error handling code..
+^ To handle that we would use three different stage names for bookings and duplicate the error handling code.. With only one of those stages this example is already too big to be included it slides.
 
 ^ Now imagine how much bigger it would be if we want to explicitly release the authorization so that customers doesn't wait for timeout to get their money back..
 
-^ I believe that code is complex because we are dealing with distributed transaction in ad-hock fashion.
+^ This code already smells like a distributed transaction and I believe it is complex because we are dealing with distributed transaction in ad-hock fashion.
 
 ---
 
@@ -284,7 +284,7 @@ end
 - Any other SaaS integration
 - Microservices
 
-^ And distributed transactions are really everywhere, because each time you interact with CRM's, payment processors, any other SaaS tools or even your own microservices - it's very likely that you would deal with them.
+^ And distributed transactions are really everywhere - each time you interact with CRM's, payment processors, any other SaaS tools or even your own microservices - it's very likely that you would deal with them.
 
 ^ I'm not talking here about research projects and large enterprises that distribute because of their scale, I'm talking about small and medium projects that have those transactions. That's due to how software development works in 21 century - you write your core and use bunch of paid subscriptions because there is a SaaS for everything and nobody likes to reinvent the wheel.
 
@@ -336,7 +336,7 @@ after execution is finished.
 _semantically_ amend it's effects
 - Compensation and transactions should be _idempotent_
 
-^ The way how does it work is...
+^ The way how does it work is really simple...
 
 ^ ...
 
@@ -353,6 +353,8 @@ _semantically_ amend it's effects
 ![inline](sagas/sagas_example.png)
 
 ^ Getting back to our booking site, with Saga you define a compensation for each step and Saga makes sure that if one of the stage failed (which is flight booking in our example), compensations are run to amend partial execution
+
+^ So it's like we have a step-by-step map how to get to the destination and plan B how to return back from any step by a secure route.
 
 ---
 
@@ -372,7 +374,7 @@ Sage is a dependency-free pure Elixir library inspired by Sagas pattern.
 
 Provides set of additional features on top of steps, transactions and compensations defined by the original paper.
 
-^ There is Sage..
+^ There is Gisla implemented in Erlang by Mark Allen and there is Sage..
 
 ^ Sage is dependency-free pure Elixir library inspired by this pattern and provides set of features on top of Sagas.
 
@@ -436,6 +438,7 @@ that run asynchronously don't have access to each others effects.
 
 ^ The second one is that it makes it easy implement retries, they work like a checkpoints and you can decide from which stage we should apply forward recovery
 
+^ In this example we rollback few bookings before retrying them, but nothing stops us to retry only the failed stage.
 
 ---
 
@@ -459,7 +462,7 @@ end
 
 ![inline](sagas/sage_circuit_breaker.png)
 
-^ The third one is circuit breakers. They are useful when we can continue the execution with some predefined value.
+^ The third one is circuit breakers. They are useful when we after failure can continue the execution with some predefined value.
 
 ^ In our example we want to know actual currency exchange rates on each execution but if the service is not available - we can continue by using cached value.
 
@@ -525,7 +528,6 @@ end
 ## Things to come
 
 - Saga execution log
-- Plug-style module callbacks
 - Compile-time type checking
 
 ^ Saga execution log which writes Sage state into a pesistent storage, so we would be able to recover when the process or node crashes or even continue the execution after we fixed the bug.
@@ -643,3 +645,9 @@ GitHub:            AndrewDryga
 Twitter:           andrew_dryga
 Elixir-Lang Slack: AndrewDryga
 Email:             andrew@dryga.com
+
+^ Thank you.
+
+^ You can find me over the internet.
+
+^ Any questions?
